@@ -9,7 +9,7 @@ def readInstance(filePath):
     n = int(f.readline()) # numero de vertices
     m = int(f.readline()) # numero de arcos
     s = int(f.readline()) # indice da origem
-    t = int(f.readline()) # indice do escoadouro
+    t = int(f.readline()) # indice do escoadouro0
 
     begin = [] # indices i
     end = [] # indices j
@@ -21,5 +21,24 @@ def readInstance(filePath):
         begin.append(i)
         end.append(j)
         capacity.append(c)
+
+    return n,m,s,t,begin,end,capacity
+
+# Criação do modelo (ainda não está completo)
+def createProblem(n,m,s,t,begin,end,capacity):
+    prob = cplex.Cplex()
+
+    custo = 0 # custo em todos os arcos é 0
+    b = 0 # fluxo liquido em cada arco
+
+    prob.objective.set_sense(prob.objective.sense.minimize)
+
+    for i, j, c in zip(begin,end,capacity):
+        prob.variables.add(obj=[custo], lb=[0], ub=[c], types="I", names=["x_" + str(j+1) + "_" + str(k+1)])
+
+    prob.variables.add(obj=[custo], lb=[0], ub=[float("inf")], types="I", names=["x_" + str(s) + "_" + str(t)])
+
+
+
 
 readInstance(sys.argv[1]) # chamada de funcao
