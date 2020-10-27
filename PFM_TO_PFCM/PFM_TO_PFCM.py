@@ -34,11 +34,21 @@ def createProblem(n,m,s,t,begin,end,capacity):
     prob.objective.set_sense(prob.objective.sense.minimize)
 
     for i, j, c in zip(begin,end,capacity):
-        prob.variables.add(obj=[custo], lb=[0], ub=[c], types="I", names=["x_" + str(j+1) + "_" + str(k+1)])
+        prob.variables.add(obj=[custo], lb=[0], ub=[c], types="I", names=["x_" + str(i) + "_" + str(j)])
 
     prob.variables.add(obj=[custo], lb=[0], ub=[float("inf")], types="I", names=["x_" + str(s) + "_" + str(t)])
 
+    return prob
 
+def main():
 
+    try:
+        n,m,s,t,begin,end,capacity = readInstance(sys.argv[1])
+        prob = createProblem(n,m,s,t,begin,end,capacity)
+        prob.write("model.lp")
+        #prob.solve()
+    except CplexError as exc:
+        print(exc)
+        return
 
-readInstance(sys.argv[1]) # chamada de funcao
+main()
