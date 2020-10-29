@@ -22,6 +22,8 @@ def readInstance(filePath):
         end.append(j)
         capacity.append(c)
 
+    f.close()
+
     return n,m,s,t,begin,end,capacity
 
 # Criação do modelo (ainda não está completo)
@@ -38,6 +40,20 @@ def createProblem(n,m,s,t,begin,end,capacity):
 
     prob.variables.add(obj=[custo], lb=[0], ub=[float("inf")], types="I", names=["x_" + str(s) + "_" + str(t)])
 
+    names = []
+    for i,j in zip (begin,end):
+        names.append("x_" + str(i) + "_" + str(j))
+
+    """ coeff = []
+    for i,j in zip (begin,end):
+        for k,l in zip (begin, end):
+            if j==k:
+                coeff.append(-1)
+            else:
+                coeff.append(1) """
+              
+
+
     return prob
 
 def main():
@@ -45,7 +61,7 @@ def main():
     try:
         n,m,s,t,begin,end,capacity = readInstance(sys.argv[1])
         prob = createProblem(n,m,s,t,begin,end,capacity)
-        prob.write("model.lp")
+        #prob.write("model.lp")
         #prob.solve()
     except CplexError as exc:
         print(exc)
