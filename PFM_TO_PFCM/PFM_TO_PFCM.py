@@ -26,7 +26,7 @@ def readInstance(filePath):
 
     return n,m,s,t,begin,end,capacity
 
-# Criação do modelo (ainda não está completo)
+# Criação do modelo 
 def createProblem(n,m,s,t,begin,end,capacity):
     prob = cplex.Cplex()
 
@@ -41,7 +41,7 @@ def createProblem(n,m,s,t,begin,end,capacity):
         if (i not in vertices):
             vertices.append(i)
 
-    prob.objective.set_sense(prob.objective.sense.maximize)
+    prob.objective.set_sense(prob.objective.sense.minimize)
 
     for i, j, c in zip(begin,end,capacity):
         prob.variables.add(obj=[custo], lb=[0], ub=[c], types="I", names=["x_" + str(i) + "_" + str(j)])
@@ -63,29 +63,28 @@ def createProblem(n,m,s,t,begin,end,capacity):
     constraints = []
 
     for x in vertices:
-        if x != 1 or x!= 7:
-            coef, arc = [], []
-            for i,j,num in zip (begin, end, range(len(begin))):
-                if (i == x):
-                    coef.append(1)
-                    arc.append(names[num])
-                if (j == x):
-                    coef.append(-1)
-                    arc.append(names[num])
+        coef, arc = [], []
+        for i,j,num in zip (begin, end, range(len(begin))):
+            if (i == x):
+                coef.append(1)
+                arc.append(names[num])
+            if (j == x):
+                coef.append(-1)
+                arc.append(names[num])
+        
+        constraints.append([arc,coef])
+        
+        if x != s and x!= t:
             rhs.append(0)
-            
-            constraints.append([arc,coef])
-        elif x == s:
+        if x == s:
             rhs.append(limite_superior)
         elif x == t:
-            rhs.append(-limite_superior)
+            rhs.append(limite_superior)
 
 
     constraint_names = ["c" + str(i) for i, _ in enumerate(constraints)]
 
     constraint_senses = ["E"] * len(constraints)
-
-    print(rhs)
 
     prob.linear_constraints.add(names=constraint_names,
                                 lin_expr=constraints,
