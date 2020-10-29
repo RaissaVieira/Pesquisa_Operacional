@@ -33,27 +33,65 @@ def createProblem(n,m,s,t,begin,end,capacity):
     custo = 0 # custo em todos os arcos é 0
     b = 0 # fluxo liquido em cada arco
 
-    prob.objective.set_sense(prob.objective.sense.minimize)
+    vertices = []
+    for i in begin:
+        if (i not in vertices):
+            vertices.append(i)
+    for i in end:
+        if (i not in vertices):
+            vertices.append(i)
+
+    prob.objective.set_sense(prob.objective.sense.maximize)
 
     for i, j, c in zip(begin,end,capacity):
         prob.variables.add(obj=[custo], lb=[0], ub=[c], types="I", names=["x_" + str(i) + "_" + str(j)])
 
-    prob.variables.add(obj=[custo], lb=[0], ub=[float("inf")], types="I", names=["x_" + str(s) + "_" + str(t)])
+    prob.variables.add(obj=[10000], lb=[0], ub=[float("inf")], types="I", names=["x_" + str(s) + "_" + str(t)])
 
     names = []
     for i,j in zip (begin,end):
         names.append("x_" + str(i) + "_" + str(j))
+    
+    limite_superior = 0
+    rhs = []
+    for x in vertices:
+        if x == s:
+            for i,j,c in zip (begin, end,capacity):
+                if (i == x):
+                    limite_superior += c
 
-    """ coeff = []
-    for i,j in zip (begin,end):
-        for k,l in zip (begin, end):
-            if j==k:
-                coeff.append(-1)
-            else:
-                coeff.append(1) """
+    constraints = []
+
+    for x in vertices:
+        if x != 1 or x!= 7:
+            coef, arc = [], []
+            for i,j,num in zip (begin, end, range(len(begin))):
+                if (i == x):
+                    coef.append(1)
+                    arc.append(names[num])
+                if (j == x):
+                    coef.append(-1)
+                    arc.append(names[num])
+            rhs.append(0)
+            
+            constraints.append([arc,coef])
+        elif x == s:
+            rhs.append(limite_superior)
+        elif x == t:
+            rhs.append(-limite_superior)
+
+
+    constraint_names = ["c" + str(i) for i, _ in enumerate(constraints)]
+
+    constraint_senses = ["E"] * len(constraints)
+
+    print(rhs)
+
+    prob.linear_constraints.add(names=constraint_names,
+                                lin_expr=constraints,
+                                senses=constraint_senses,
+                                rhs=rhs)
               
-
-
     return prob
 
 def main():
@@ -61,10 +99,16 @@ def main():
     try:
         n,m,s,t,begin,end,capacity = readInstance(sys.argv[1])
         prob = createProblem(n,m,s,t,begin,end,capacity)
-        #prob.write("model.lp")
-        #prob.solve()
+        prob.write("model.lp")
+        prob.solve()
     except CplexError as exc:
         print(exc)
         return
+
+    # solution.get_status() returns an integer code
+    print ("Solution status = ", prob.solution.get_status(), ":")
+    # the following line prints the corresponding string
+    print (prob.solution.status[prob.solution.get_status()])
+    print ("Solution value  = ", prob.solution.get_objective_value())
 
 main()
