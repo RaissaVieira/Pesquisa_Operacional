@@ -22,6 +22,9 @@ def readInstance(filePath):
         end.append(j)
         capacity.append(c)
 
+    begin.append(s)
+    end.append(t)
+
     f.close()
 
     return n,m,s,t,begin,end,capacity
@@ -31,6 +34,7 @@ def createProblem(n,m,s,t,begin,end,capacity):
     prob = cplex.Cplex()
 
     custo = 0 # custo em todos os arcos é 0
+    custo_s_t = 3
     b = 0 # fluxo liquido em cada arco
 
     vertices = []
@@ -41,25 +45,27 @@ def createProblem(n,m,s,t,begin,end,capacity):
         if (i not in vertices):
             vertices.append(i)
 
+    limite_superior = 0
+    for x in vertices:
+        if x == t:
+            for i,j,c in zip (begin, end,capacity):
+                if (j == x):
+                    limite_superior += c
+
+    prob.set_problem_type(cplex.Cplex.problem_type.LP)
+
     prob.objective.set_sense(prob.objective.sense.minimize)
 
     for i, j, c in zip(begin,end,capacity):
-        prob.variables.add(obj=[custo], lb=[0], ub=[c], types="I", names=["x_" + str(i) + "_" + str(j)])
+        prob.variables.add(obj=[custo], lb=[0], ub=[c], types="C", names=["x_" + str(i) + "_" + str(j)])
 
-    prob.variables.add(obj=[10000], lb=[0], ub=[float("inf")], types="I", names=["x_" + str(s) + "_" + str(t)])
+    prob.variables.add(obj=[custo_s_t], lb=[0], ub=[float("inf")], types="I", names=["x_" + str(s) + "_" + str(t)])
 
     names = []
     for i,j in zip (begin,end):
         names.append("x_" + str(i) + "_" + str(j))
-    
-    limite_superior = 0
-    rhs = []
-    for x in vertices:
-        if x == s:
-            for i,j,c in zip (begin, end,capacity):
-                if (i == x):
-                    limite_superior += c
 
+    rhs = []
     constraints = []
 
     for x in vertices:
@@ -73,14 +79,13 @@ def createProblem(n,m,s,t,begin,end,capacity):
                 arc.append(names[num])
         
         constraints.append([arc,coef])
-        
+    
         if x != s and x!= t:
             rhs.append(0)
         if x == s:
             rhs.append(limite_superior)
         elif x == t:
-            rhs.append(limite_superior)
-
+            rhs.append(-limite_superior)
 
     constraint_names = ["c" + str(i) for i, _ in enumerate(constraints)]
 
@@ -109,5 +114,15 @@ def main():
     # the following line prints the corresponding string
     print (prob.solution.status[prob.solution.get_status()])
     print ("Solution value  = ", prob.solution.get_objective_value())
+
+    print ("Solution:")
+    fluxo_maximo = 0
+    for i, j in zip(begin,end):
+        value = prob.solution.get_values("x_" + str(i) + "_" + str(j))
+
+        if i == s and j != t:
+            fluxo_maximo += value
+
+    print("Fluxo Maximo: ", fluxo_maximo)
 
 main()
