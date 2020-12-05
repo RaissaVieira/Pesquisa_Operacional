@@ -43,3 +43,29 @@ def readInstance(filePath):
     f.close() # Fecha arquivo
 
     return n, indice, data_min_ini, duracao, data_entrega, multa # Retorna as variáveis extraídas
+
+def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
+    prob = cplex.Cplex() # inicializando o resolvedor do CPLEX
+
+    prob.set_problem_type(cplex.Cplex.problem_type.LP) # Definindo como um problema de programação linear
+
+    prob.objective.set_sense(prob.objective.sense.minimize) # Definindo que a função objetivo irá buscar a minimização, como pede o problema do custo mínimo
+
+    """ 
+    for i, m, p in zip(indice,multa, data_entrega): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
+    prob.variables.add(obj=[m], lb=["F_" + str(i) - p], ub=[], types="I", names=["L_" + str(i)])
+    """
+    return prob
+    
+def main():
+
+    try: # Tentando resolver o problema
+        n,indice,data_min_ini,duracao,data_entrega,multa = readInstance(sys.argv[1]) # Lendo o arquivo
+        prob = createProblem(n,indice,data_min_ini,duracao,data_entrega,multa) # Aplicando o resolvedor
+        prob.write("model.lp") 
+        #prob.solve() # Resolvendo o problema
+    except CplexError as exc:
+        print(exc)
+        return
+
+main()
