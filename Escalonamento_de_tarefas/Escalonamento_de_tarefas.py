@@ -64,6 +64,9 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
     for j, date_min in zip(J, data_min_ini):
         prob.variables.add(obj=[0], lb=[date_min], ub=[], types="I", names=["R_" + str(j)])
 
+    for j in J:
+        prob.variables.add(obj=[], lb=[], ub=[], types="I", names=["F_" + str(j)])
+
     for i in V:
         coef, arc = [], []
         for j in V:
@@ -88,13 +91,28 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
                 arc.append("x_" + str(i) + "_" + str(j))
         constraints.append([arc,coef])
         rhs.append(1)
-    
-    constraint_names = ["c" + str(i) for i, _ in enumerate(constraints)]
+
     constraint_senses = ["E"] * len(constraints)
+
+    for j, dj in zip(J, data_entrega):
+        coef, arc = [], []
+        if (i != j):
+            coef.append(1)
+            coef.append(-1)
+            arc.append("F_" + str(j))
+            arc.append(dj)
+            constraint_senses.append("L")
+            constraints.append([arc,coef])
+            rhs.append(1) 
+    
+    for i in constraints:
+        print(i)
+
+    constraint_names = ["c" + str(i) for i, _ in enumerate(constraints)]
     prob.linear_constraints.add(names=constraint_names,
                                 lin_expr=constraints,
                                 senses=constraint_senses,
-                                rhs=rhs)
+                                rhs=rhs) 
 
     return prob
     
