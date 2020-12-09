@@ -96,14 +96,27 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
 
     for j, dj in zip(J, data_entrega):
         coef, arc = [], []
-        if (i != j):
-            coef.append(1)
-            coef.append(-1)
-            arc.append("F_" + str(j))
-            arc.append(dj)
-            constraint_senses.append("L")
-            constraints.append([arc,coef])
-            rhs.append(1) 
+        coef.append(1)
+        coef.append(-1)
+        arc.append("F_" + str(j))
+        arc.append("L_" + str(j))
+        constraint_senses.append("L")
+        constraints.append([arc,coef])
+        rhs.append(dj) 
+
+    for i, di in zip(J, data_entrega):
+        for j in J:
+            coef, arc = [], []
+            if (i != j):
+                coef.append(1)
+                arc.append("R_" + str(i))
+                coef.append(-1)
+                #M(1-xij)
+                coef.append(-1)
+                arc.append("R_" + str(j))
+                constraint_senses.append("L")
+                constraints.append([arc,coef])
+                rhs.append(di) 
     
     for i in constraints:
         print(i)
