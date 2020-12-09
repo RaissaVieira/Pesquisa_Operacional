@@ -50,16 +50,19 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
 
     prob.objective.set_sense(prob.objective.sense.minimize) # Definindo que a função objetivo irá buscar a minimização, como pede o problema do custo mínimo
 
-    for i, m, p in zip(indice,multa, data_entrega): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
-        prob.variables.add(obj=[m], lb=[0], ub=[], types="I", names=["L_" + str(i)])
-
     V = [] # Definindo um array com todos os vértices a partir dos indices
     for i in indice: 
         V.append(i) 
     
     J = []
-    for j in indice:
+    for j in indice[:n-1]:
         J.append(j)
+
+    for i, m, p in zip(J,multa, data_entrega): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
+        prob.variables.add(obj=[m], lb=[0], ub=[], types="I", names=["L_" + str(i)])
+
+    for j, date_min in zip(J, data_min_ini):
+        prob.variables.add(obj=[0], lb=[date_min], ub=[], types="I", names=["R_" + str(j)])
 
     for i in V:
         coef, arc = [], []
