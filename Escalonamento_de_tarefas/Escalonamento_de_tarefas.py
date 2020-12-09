@@ -57,10 +57,17 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
     J = []
     for j in indice[:n-1]:
         J.append(j)
+    
 
     for i, m, p in zip(J,multa, data_entrega): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
         prob.variables.add(obj=[m], lb=[0], ub=[], types="I", names=["L_" + str(i)])
+    
+    for i in J:
+        prob.variables.add(obj=[], lb=[], ub=[], types="I", names=["F_" + str(i)])
 
+    for j, date_min in zip(J, data_min_ini):
+        prob.variables.add(obj=[0], lb=[date_min], ub=[], types="I", names=["R_" + str(j)])
+    
     for j, date_min in zip(J, data_min_ini):
         prob.variables.add(obj=[0], lb=[date_min], ub=[], types="I", names=["R_" + str(j)])
 
@@ -91,6 +98,7 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
     
     constraint_names = ["c" + str(i) for i, _ in enumerate(constraints)]
     constraint_senses = ["E"] * len(constraints)
+
     prob.linear_constraints.add(names=constraint_names,
                                 lin_expr=constraints,
                                 senses=constraint_senses,
