@@ -53,27 +53,33 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
     for i, m, p in zip(indice,multa, data_entrega): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
         prob.variables.add(obj=[m], lb=[0], ub=[], types="I", names=["L_" + str(i)])
 
-    vertices = [] # Definindo um array com todos os vértices a partir dos indices
+    V = [] # Definindo um array com todos os vértices a partir dos indices
     for i in indice: 
-        vertices.append(i) 
+        V.append(i) 
     
     J = []
     for j in indice:
         J.append(j)
+
+    for i in V:
+        coef, arc = [], []
+        for j in V:
+            if (i != j):
+                prob.variables.add(obj=[0], lb=[0], ub=[1], types="I", names=["x_" + str(i) + "_" + str(j)])
     
     constraints, rhs = [], []
-    for i in vertices:
+    for i in V:
         coef, arc = [], []
-        for j in J:
+        for j in V:
             if (i != j):
                 coef.append(1)
                 arc.append("x_" + str(i) + "_" + str(j))
         constraints.append([arc,coef])
         rhs.append(1)
 
-    for j in J:
+    for j in V:
         coef, arc = [], []
-        for i in vertices:
+        for i in V:
             if (i != j):
                 coef.append(1)
                 arc.append("x_" + str(i) + "_" + str(j))
