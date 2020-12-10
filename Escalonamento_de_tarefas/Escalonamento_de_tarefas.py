@@ -104,7 +104,14 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
         constraints.append([arc,coef])
         rhs.append(pj) 
 
-    M = 1000
+    M = 0
+    for rj in data_min_ini:
+        if rj > M:
+            M = rj
+    
+    for dj in duracao:
+        M += dj
+
     for i, di in zip(J, data_entrega):
         for j in J:
             coef, arc = [], []
@@ -133,9 +140,13 @@ def main():
         n,indice,data_min_ini,duracao,data_entrega,multa = readInstance(sys.argv[1]) # Lendo o arquivo
         prob = createProblem(n,indice,data_min_ini,duracao,data_entrega,multa) # Chamada da funcao para a criacao do problema
         prob.write("model.lp") 
-        #prob.solve() # Resolvendo o problema
+        prob.solve() # Resolvendo o problema
     except CplexError as exc:
         print(exc)
         return
+
+    print ("Solution status = ", prob.solution.get_status(), ":") # Retorna o status da resolução
+    print (prob.solution.status[prob.solution.get_status()]) #Retorna a solução do status
+    print ("Solution value  = ", prob.solution.get_objective_value()) # Retorna o valor da solução
 
 main()
