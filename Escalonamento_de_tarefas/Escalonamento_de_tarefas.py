@@ -111,13 +111,13 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
             if (i != j):
                 coef.append(1)
                 arc.append("R_" + str(i))
-                coef.append(-1)
-                M*(1-xij)
+                coef.append(1)
+                arc.append( M*("x_" + str(i) + "_" + str(j)) )
                 coef.append(-1)
                 arc.append("R_" + str(j))
                 constraint_senses.append("L")
                 constraints.append([arc,coef])
-                rhs.append(di)  
+                rhs.append(di + M)  
     
     for i in constraints:
         print(i)
