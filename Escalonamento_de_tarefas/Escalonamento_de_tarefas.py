@@ -58,14 +58,14 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
     for j in indice[:n-1]:
         J.append(j)
 
-    for i, m, p in zip(J,multa, data_entrega): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
+    for i, m in zip(J,multa): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
         prob.variables.add(obj=[m], lb=[0], ub=[], types="I", names=["L_" + str(i)])
 
     for j, date_min in zip(J, data_min_ini):
         prob.variables.add(obj=[0], lb=[date_min], ub=[], types="I", names=["R_" + str(j)])
 
     for j in J:
-        prob.variables.add(obj=[], lb=[], ub=[], types="I", names=["F_" + str(j)])
+        prob.variables.add(obj=[0], lb=[], ub=[], types="I", names=["F_" + str(j)])
 
     for i in V:
         coef, arc = [], []
@@ -94,7 +94,7 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
 
     constraint_senses = ["E"] * len(constraints)
 
-    for j, dj in zip(J, data_entrega):
+    for j, pj in zip(J, data_entrega):
         coef, arc = [], []
         coef.append(1)
         coef.append(-1)
@@ -102,8 +102,9 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
         arc.append("L_" + str(j))
         constraint_senses.append("L")
         constraints.append([arc,coef])
-        rhs.append(dj) 
+        rhs.append(pj) 
 
+    M = 1000
     for i, di in zip(J, data_entrega):
         for j in J:
             coef, arc = [], []
@@ -111,12 +112,12 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
                 coef.append(1)
                 arc.append("R_" + str(i))
                 coef.append(-1)
-                #M(1-xij)
+                M*(1-xij)
                 coef.append(-1)
                 arc.append("R_" + str(j))
                 constraint_senses.append("L")
                 constraints.append([arc,coef])
-                rhs.append(di) 
+                rhs.append(di)  
     
     for i in constraints:
         print(i)
