@@ -21,7 +21,11 @@ def readInstance(filePath):
     data_entrega = [] # Data de entrega
     multa = [] #multa por dia de atraso
 
-    for dado in range(n): # Identificando a capacidade e os índices de cada arco
+    # Criacao do no 0
+    n += 1
+    indice.append(0)
+
+    for dado in range(n-1): # Identificando a capacidade e os índices de cada arco
         l = f.readline() # Lendo a linha do arco
         i, dmi, d, de, m = int(l.split()[0]), int(l.split()[1]), int(l.split()[2]), int(l.split()[3]), int(l.split()[4]) # Separando suas informações de interesse
         # Adicionando as informacoes nos respectivos array
@@ -30,14 +34,6 @@ def readInstance(filePath):
         duracao.append(d)
         data_entrega.append(de)
         multa.append(m)
-
-    # Criando o no 0
-    n += 1
-    indice.append(0)
-    data_min_ini.append(0)
-    duracao.append(0)
-    data_entrega.append(0)
-    multa.append(0)
     
     f.close() # Fecha arquivo
 
@@ -55,7 +51,7 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
         V.append(i) 
     
     J = []
-    for j in indice[:n-1]:
+    for j in indice[1:]:
         J.append(j)
 
     for i, m in zip(J,multa): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
@@ -148,5 +144,11 @@ def main():
     print ("Solution status = ", prob.solution.get_status(), ":") # Retorna o status da resolução
     print (prob.solution.status[prob.solution.get_status()]) #Retorna a solução do status
     print ("Solution value  = ", prob.solution.get_objective_value()) # Retorna o valor da solução
+
+    for i in V:
+        for j in V:
+            if (i != j):
+                value = prob.solution.get_values("x_" + str(i) + "_" + str(j))
+                print(value)
 
 main()
