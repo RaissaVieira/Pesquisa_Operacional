@@ -88,6 +88,15 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
         constraints.append([arc,coef])
         rhs.append(1)
 
+    for j, dj in zip(J, duracao):
+        coef, arc = [], []
+        coef.append(1)
+        coef.append(-1)
+        arc.append("F_" + str(j))
+        arc.append("R_" + str(j))
+        constraints.append([arc,coef])
+        rhs.append(dj) 
+
     constraint_senses = ["E"] * len(constraints)
 
     for j, pj in zip(J, data_entrega):
@@ -108,7 +117,7 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
     for dj in duracao:
         M += dj
 
-    for i, di in zip(J, data_entrega):
+    for i, di in zip(J, duracao):
         for j in J:
             coef, arc = [], []
             if (i != j):
@@ -143,12 +152,38 @@ def main():
 
     print ("Solution status = ", prob.solution.get_status(), ":") # Retorna o status da resolução
     print (prob.solution.status[prob.solution.get_status()]) #Retorna a solução do status
-    print ("Solution value  = ", prob.solution.get_objective_value()) # Retorna o valor da solução
+    
+    print ("Multa total a ser paga = ", prob.solution.get_objective_value()) # Retorna o valor da solução
 
-    for i in V:
-        for j in V:
-            if (i != j):
-                value = prob.solution.get_values("x_" + str(i) + "_" + str(j))
-                print(value)
+    for j, wj in zip(indice[1:], multa):
+        print("\nMulta do pedido {}".format(j))
+        dias_atraso = prob.solution.get_values("L_" + str(j))
+        print(round(dias_atraso*wj,2))
+    
+    for j in indice[1:]:
+        print("\nData de inicio do pedido {}".format(j))
+        data_inicio = prob.solution.get_values("R_" + str(j))
+        print(round(data_inicio,2))
+
+    inicio = []
+    for j in indice[1:]:
+        data_inicio = prob.solution.get_values("R_" + str(j))
+        inicio.append(data_inicio)
+
+    fim = []
+    for j in indice[1:]:
+        data_fim = prob.solution.get_values("F_" + str(j))
+        fim.append(data_fim)
+
+    inicio.sort()
+    fim.sort()
+
+    Dj = 0
+    for j in indice[:n-1]:
+        x = j + 1
+        if x != n-1:
+            Dj += round(inicio[j+1]-fim[j],2)
+    
+    print("\nTempo de ajusto de maquina = {}".format(Dj))
 
 main()
