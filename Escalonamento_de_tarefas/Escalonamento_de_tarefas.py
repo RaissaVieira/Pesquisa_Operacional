@@ -50,43 +50,48 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
     for i in indice: 
         V.append(i) 
     
-    J = []
+    J = [] # Definindo um array com todos os vértices a partir dos indices
     for j in indice[1:]:
         J.append(j)
 
-    for i, m in zip(J,multa): # Iteração sequencial das variáveis dos vértices de origem, escoagem e capacidade de cada arco
+    for i, m in zip(J,multa): # Definindo a variável que representa os dias de atraso na entrega, 
+                            # cujo valor é multiplicado pelo valor da multa por dia, e apresenta como valor mínimo 0
         prob.variables.add(obj=[m], lb=[0], ub=[], types="I", names=["L_" + str(i)])
 
-    for j, date_min in zip(J, data_min_ini):
+    for j, date_min in zip(J, data_min_ini): # Definindo a variável que representa a data de início da produção do pedido, 
+                                             # cujo o valor multiplicado é 0 e o valor mínimo é data mínima do pedido
         prob.variables.add(obj=[0], lb=[date_min], ub=[], types="I", names=["R_" + str(j)])
 
-    for j in J:
+    for j in J: # Definindo a variável que representa a data em que o pedido será entregue, cujo o valor multiplicado é 0
         prob.variables.add(obj=[0], lb=[], ub=[], types="I", names=["F_" + str(j)])
 
     for i in V:
         coef, arc = [], []
         for j in V:
             if (i != j):
+                # Criando as variáveis de arco, relacionando os pedidos, cada arco representado por Xij
                 prob.variables.add(obj=[0], lb=[0], ub=[1], types="I", names=["x_" + str(i) + "_" + str(j)])
+    
+    #Após a criação das variáveis, será definido as restrições: 
     
     constraints, rhs = [], []
     for i in V:
         coef, arc = [], []
         for j in V:
             if (i != j):
-                coef.append(1)
-                arc.append("x_" + str(i) + "_" + str(j))
+                coef.append(1) # Multiplicando cada Xij, de um mesmo i, por 1
+                arc.append("x_" + str(i) + "_" + str(j)) # Realizando a somatória de todos Xij de um mesmo i
         constraints.append([arc,coef])
-        rhs.append(1)
+        rhs.append(1) # Definindo que a somatória deve ter alguma relação com 1
 
     for j in V:
         coef, arc = [], []
         for i in V:
             if (i != j):
-                coef.append(1)
-                arc.append("x_" + str(i) + "_" + str(j))
+                coef.append(1) # Multiplicando cada Xij, de um mesmo j, por 1
+                arc.append("x_" + str(i) + "_" + str(j)) # Realizando a somatória de todos Xij de um mesmo j
         constraints.append([arc,coef])
-        rhs.append(1)
+        rhs.append(1) # Definindo que a somatória deve ter alguma relação com 1
 
     for j, dj in zip(J, duracao):
         coef, arc = [], []
@@ -99,20 +104,21 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
 
     constraint_senses = ["E"] * len(constraints)
 
-    for j, pj in zip(J, data_entrega):
+    for j, pj in zip(J, data_entrega): # Fj - Lj <= pj
         coef, arc = [], []
-        coef.append(1)
-        coef.append(-1)
-        arc.append("F_" + str(j))
-        arc.append("L_" + str(j))
-        constraint_senses.append("L")
+        coef.append(1) # Índice multiplicativo da variável Fj, que representa a data de entrega do pedido
+        coef.append(-1) # Índice multiplicativo da variável Lj, que representa os dias de atraso na entrega do pedido
+        arc.append("F_" + str(j)) # Definindo Fj, que seria a data de entrega real do pedido
+        arc.append("L_" + str(j)) # Definindo Lj, que seria os dias de atraso na entrega do pedido
+        constraint_senses.append("L") # Definindo a relação como menor igual 
         constraints.append([arc,coef])
-        rhs.append(pj) 
-
+        rhs.append(pj) # Valor relacionado a operação de soma das variáveis contidas no constraints, no caso seria o valor da data de entrega prevista
+    
+    # Calculando o M, um valor suficiente grande para servir de gatilho em uma restrição.
     M = 0
     for rj in data_min_ini:
         if rj > M:
-            M = rj
+            M = rj # M será o valor máximo da data mínima de início, acrescentando todas as durações de todas as tarefas
     
     for dj in duracao:
         M += dj
@@ -121,23 +127,24 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
         for j in J:
             coef, arc = [], []
             if (i != j):
-                coef.append(1)
-                arc.append("R_" + str(i))
-                coef.append(M)
-                arc.append("x_" + str(i) + "_" + str(j))
-                coef.append(-1)
-                arc.append("R_" + str(j))
-                constraint_senses.append("L")
+                coef.append(1) # Definindo o índice multiplicativo de Ri, que seria a data de início da produção do pedido i
+                arc.append("R_" + str(i))# Definindo Ri, que seria a data de início da produção do pedido i
+                coef.append(M) # Definindo o índice multiplicativo de Xij, como o M suficientemente grande
+                arc.append("x_" + str(i) + "_" + str(j))  # Definindo Xij, que seriam as variáveis de arco
+                coef.append(-1) # Definindo o índice multiplicativo de Rj, que seria a data de início da produção do pedido j
+                arc.append("R_" + str(j)) # Definindo Rj, que seria a data de início da produção do pedido j
+                constraint_senses.append("L") # Definindo a relação como menor igual
                 constraints.append([arc,coef])
-                rhs.append(-di + M)  
+                rhs.append(-di + M) # Definindo a relação de soma das variáveis acima, no caso a relação de menor ou igual, 
+                                    # como a diferença entre o M suficientemente grande o di, que seria a duração da tarefa i    
 
-    constraint_names = ["c" + str(i) for i, _ in enumerate(constraints)]
-    prob.linear_constraints.add(names=constraint_names,
-                                lin_expr=constraints,
-                                senses=constraint_senses,
-                                rhs=rhs) 
+    constraint_names = ["c" + str(i) for i, _ in enumerate(constraints)] # Definindo o nome de cada restrição conforme o número existente destas
+    prob.linear_constraints.add(names=constraint_names, # Adicionando os nomes das restrições
+                                lin_expr=constraints, # Adicionando as relações entre variáveis e coeficientes em cada restrição
+                                senses=constraint_senses, # Definindo os tipos de relação de cada restrição
+                                rhs=rhs) # Definindo o que estas devem resultar.
 
-    return prob
+    return prob # Retorna problema
     
 def main():
 
