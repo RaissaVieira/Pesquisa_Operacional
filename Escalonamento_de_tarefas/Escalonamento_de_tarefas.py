@@ -115,13 +115,13 @@ def createProblem(n, indice, data_min_ini, duracao, data_entrega, multa):
         rhs.append(pj) # Valor relacionado a operação de soma das variáveis contidas no constraints, no caso seria o valor da data de entrega prevista
     
     # Calculando o M, um valor suficiente grande para servir de gatilho em uma restrição.
-    M = 0
+    M = 0 # Iniciando M como 0
     for rj in data_min_ini:
         if rj > M:
             M = rj # M será o valor máximo da data mínima de início, acrescentando todas as durações de todas as tarefas
     
     for dj in duracao:
-        M += dj
+        M += dj # Acrescentando em M todas as durações de todas as tarefas
 
     for i, di in zip(J, duracao):
         for j in J:
@@ -162,35 +162,42 @@ def main():
     
     print ("Multa total a ser paga = ", prob.solution.get_objective_value()) # Retorna o valor da solução
 
+    # Exibindo todo os valores das multas de cada pedido
     for j, wj in zip(indice[1:], multa):
         print("\nMulta do pedido {}".format(j))
-        dias_atraso = prob.solution.get_values("L_" + str(j))
-        print(round(dias_atraso*wj,2))
-    
+        dias_atraso = prob.solution.get_values("L_" + str(j)) # Armazenando em uma variável auxiliar o valor de 
+                                                              # Lj -> valor das multas de cada pedido j 
+        print(round(dias_atraso*wj,2)) # Exibindo o valor de Lj arredondado em duas casas decimais
+    # Exibindo todo os dias de ínicio de cada pedido
     for j in indice[1:]:
         print("\nData de inicio do pedido {}".format(j))
-        data_inicio = prob.solution.get_values("R_" + str(j))
-        print(round(data_inicio,2))
+        data_inicio = prob.solution.get_values("R_" + str(j)) # Armazenando em uma variável auxiliar o valor de 
+                                                              # Rj -> valor da data de ínício de cada pedido j 
+        print(round(data_inicio,2)) # Exibindo o valor de Rj arredondado em duas casas decimais
 
-    inicio = []
+    inicio = [] # Armazenando todos os valores de início de cada pedido, em ordem em que foi inserido no arquivo
     for j in indice[1:]:
-        data_inicio = prob.solution.get_values("R_" + str(j))
-        inicio.append(data_inicio)
+        data_inicio = prob.solution.get_values("R_" + str(j)) # Armazenando em uma variável auxiliar o valor de 
+                                                              # Rj -> valor do dia de ínício de cada pedido j 
+        inicio.append(data_inicio) # Pondo no array início
 
-    fim = []
+    fim = [] # Armazenando todos os valores de entrega de cada pedido, em ordem em que foi inserido no arquivo
     for j in indice[1:]:
-        data_fim = prob.solution.get_values("F_" + str(j))
-        fim.append(data_fim)
+        data_fim = prob.solution.get_values("F_" + str(j)) # Armazenando em uma variável auxiliar o valor de 
+                                                           # Fj -> valor do dia de entrega de cada pedido j
+        fim.append(data_fim) # Pondo no array fim 
 
-    inicio.sort()
-    fim.sort()
+    inicio.sort() # Colocando o array inicio em ordem do menor para o maior
+    fim.sort() # Colocando o array fim em ordem do menor para o maior
 
-    Dj = 0
+    Dj = 0 # calculando o tempo de ajuste de máquina, que seriam os dias em que não foi feita nenhuma produção
     for j in indice[:n-1]:
-        x = j + 1
-        if x != n-1:
-            Dj += round(inicio[j+1]-fim[j],2)
+        x = j + 1 # Calculando se o índice apresenta um pedido posterior, para tal acrescenta-se um, já que o array começa em 0
+        if x != n-1: # Verifica se o valor de x, ou seja, o índice analisado não é o último pedido
+            Dj += round(inicio[j+1]-fim[j],2) # É acrescido o tempo de ajuste de máquina se o fim da tarefa não bater com o início 
+                                              # da tarefa posterior, e esse tempo em que não haveria produção seria o tempo do 
+                                              # ajuste de máquina
     
-    print("\nTempo de ajusto de maquina = {}".format(Dj))
+    print("\nTempo de ajusto de maquina = {}".format(Dj)) # Exibindo o tempo de ajuste de máquina calculado
 
 main()
